@@ -1,0 +1,46 @@
+{
+  "ApiCatalog": {
+    "CreateServiceGroup": {
+      "Method": "PUT",
+      "PathTemplate": "/providers/Microsoft.Management/serviceGroups/{serviceGroupName}",
+      "ApiVersion": "2024-02-01-preview",
+      "Description": "Create or update a Service Group (async)"
+    },
+    "GetServiceGroup": {
+      "Method": "GET",
+      "PathTemplate": "/providers/Microsoft.Management/serviceGroups/{serviceGroupName}",
+      "ApiVersion": "2024-02-01-preview",
+      "Description": "Retrieve a Service Group"
+    },
+    "AddServiceGroupMember": {
+      "Method": "PUT",
+      "PathTemplate": "{resourceId}/providers/Microsoft.Relationships/serviceGroupMember/{relationshipId}",
+      "ApiVersion": "2023-09-01-preview",
+      "Description": "Add a resource to a Service Group via member relationship"
+    },
+    "CreateGoalTemplate": {
+      "Method": "PUT",
+      "PathTemplate": "/providers/Microsoft.Management/serviceGroups/{serviceGroupName}/providers/Microsoft.AzureResilienceManagement/goalTemplates/{goalTemplateName}",
+      "ApiVersion": "2025-02-01-preview",
+      "Description": "Create or update a Goal Template on a Service Group"
+    },
+    "GetGoalTemplate": {
+      "Method": "GET",
+      "PathTemplate": "/providers/Microsoft.Management/serviceGroups/{serviceGroupName}/providers/Microsoft.AzureResilienceManagement/goalTemplates/{goalTemplateName}",
+      "ApiVersion": "2025-02-01-preview",
+      "Description": "Retrieve a Goal Template"
+    },
+    "CreateGoalAssignment": {
+      "Method": "PUT",
+      "PathTemplate": "/providers/Microsoft.Management/serviceGroups/{serviceGroupName}/providers/Microsoft.AzureResilienceManagement/goalAssignments/{goalAssignmentName}",
+      "ApiVersion": "2025-02-01-preview",
+      "Description": "Create or update a Goal Assignment on a Service Group"
+    },
+    "GetGoalAssignment": {
+      "Method": "GET",
+      "PathTemplate": "/providers/Microsoft.Management/serviceGroups/{serviceGroupName}/providers/Microsoft.AzureResilienceManagement/goalAssignments/{goalAssignmentName}",
+      "ApiVersion": "2025-02-01-preview",
+      "Description": "Retrieve a Goal Assignment"
+    }
+  }
+}
