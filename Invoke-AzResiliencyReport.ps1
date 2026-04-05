@@ -1526,22 +1526,13 @@ function Invoke-Main {
             Write-Log "Posture data not available after ${argMaxWaitSec}s. Resources sheet will be based on discovered resources." -Level WARN
         }
 
-        # Step 5c: Fetch recommendations (with retry)
-        $recommendations = $null
-        $argElapsed = 0
-        Write-Log "Fetching recommendations (will retry up to ${argMaxWaitSec}s for data)..."
-        while ($argElapsed -lt $argMaxWaitSec) {
-            $recommendations = Get-ServiceGroupRecommendations
-            if ($recommendations -and $recommendations.Count -gt 0) {
-                Write-Log "Recommendations data retrieved: $($recommendations.Count) item(s)."
-                break
-            }
-            Write-Log "  Recommendations not yet available, retrying in ${argPollInterval}s... (elapsed ${argElapsed}s)" -Level DEBUG
-            Start-Sleep -Seconds $argPollInterval
-            $argElapsed += $argPollInterval
-        }
-        if (-not $recommendations -or $recommendations.Count -eq 0) {
-            Write-Log "Recommendations data not available after ${argMaxWaitSec}s." -Level WARN
+        # Step 5c: Fetch recommendations (single attempt, no retry)
+        Write-Log "Fetching recommendations..."
+        $recommendations = Get-ServiceGroupRecommendations
+        if ($recommendations -and $recommendations.Count -gt 0) {
+            Write-Log "Recommendations data retrieved: $($recommendations.Count) item(s)."
+        } else {
+            Write-Log "No recommendations returned." -Level WARN
         }
 
         # Step 6: Generate report
