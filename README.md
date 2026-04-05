@@ -65,7 +65,15 @@ The script will prompt for Azure login if needed, then generate a report at `.\R
     -ServiceGroupName "MyApp" `
     -ResourceGroupName "myRG"
 
-# Use an explicit resource list and custom output path
+# Use an explicit resource list (JSON array of ARM resource ID strings)
+# my-resources.json:
+# [
+#   "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myRG/providers/Microsoft.Compute/virtualMachines/vm1",
+#   "/subscriptions/00000000-0000-0000-0000-000000000000/resourceGroups/myRG/providers/Microsoft.Storage/storageAccounts/sa1"
+# ]
+#
+# Alternatively, use objects: [{ "resourceId": "/subscriptions/.../vm1" }]
+# Or a CSV file with a "ResourceId" column.
 .\Invoke-AzResiliencyReport.ps1 `
     -SubscriptionId "00000000-0000-0000-0000-000000000000" `
     -ServiceGroupName "MyApp" `
