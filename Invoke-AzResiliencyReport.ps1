@@ -1219,25 +1219,54 @@ function Export-ResiliencyExcelReport {
     # ── Sheet 1: Overview ──
     $portalBase = 'https://portal.azure.com/?feature.canmodifystamps=true&Microsoft_Azure_Resources=stagepreview&feature.isDrillMonitoringFeatureEnabled=true&exp.ServiceGroupsResilienceJobs=true&exp.ServiceGroupsRecoveryPlan=true&feature.isROMockEnabled=false&feature.isrhubatscaleviewenabled=true&feature.isrhubrecommendationsenabled=true&feature.isRhubAtScaleDrillsViewEnabled=true&feature.customportal=false&exp.ServiceGroupsDrill=true&microsoft_azure_resiliencyHub=gatedpreview&microsoft_azure_bcdrcenter=develop&feature.isCostImplicationUIEnabled=true&exp.ServiceGroupResilience=true&isOPS360DevModeEnabled=true&isEnhancedScoreEnabled=true&feature.canarytraffic=true'
 
+    # Calculate skipped resources count
+    $skippedByResiliency = if ($Summary) {
+        $TargetResources.Count - $Summary.ZRResources - $Summary.NonZRResources - $Summary.NotEvaluatedResources
+    } else { 'N/A' }
+
     $overviewData = @(
-        [PSCustomObject]@{ Field = 'SubscriptionId';    Value = $SubscriptionId }
-        [PSCustomObject]@{ Field = 'ServiceGroupName';  Value = $ServiceGroupName }
-        [PSCustomObject]@{ Field = 'ServiceGroupId';    Value = $script:ServiceGroupId }
-        [PSCustomObject]@{ Field = 'Location';          Value = $ServiceGroupLocation }
-        [PSCustomObject]@{ Field = 'ReportGenerated';   Value = $script:StartTimestamp.ToString('o') }
-        [PSCustomObject]@{ Field = 'ScriptVersion';     Value = '1.0.0' }
-        [PSCustomObject]@{ Field = 'Mode';              Value = $(if ($script:DryRunActive) { 'DryRun' } else { 'Live' }) }
-        [PSCustomObject]@{ Field = '';                   Value = '' }
-        [PSCustomObject]@{ Field = '── Resiliency Posture ──'; Value = '' }
-        [PSCustomObject]@{ Field = 'TotalResources';        Value = $TargetResources.Count }
-        [PSCustomObject]@{ Field = 'ZonalResilient';        Value = $(if ($Summary) { $Summary.ZRResources } else { 'N/A' }) }
-        [PSCustomObject]@{ Field = 'NonZonalResilient';     Value = $(if ($Summary) { $Summary.NonZRResources } else { 'N/A' }) }
-        [PSCustomObject]@{ Field = 'NotEvaluated';          Value = $(if ($Summary) { $Summary.NotEvaluatedResources } else { 'N/A' }) }
-        [PSCustomObject]@{ Field = '';                   Value = '' }
-        [PSCustomObject]@{ Field = '── Explore More in Portal ──'; Value = '' }
-        [PSCustomObject]@{ Field = 'Get the most current resiliency summary for this application'; Value = 'ResiliencySummary' }
-        [PSCustomObject]@{ Field = 'Create and execute a zone-down drill for this application';    Value = 'ZoneDownDrill' }
-        [PSCustomObject]@{ Field = 'View resiliency summary at scale across all applications';     Value = 'At-scale summary' }
+        [PSCustomObject]@{ Field = 'SubscriptionId';    Value = $SubscriptionId;    Note = '' }
+        [PSCustomObject]@{ Field = 'ServiceGroupName';  Value = $ServiceGroupName;  Note = '' }
+        [PSCustomObject]@{ Field = 'ServiceGroupId';    Value = $script:ServiceGroupId; Note = '' }
+        [PSCustomObject]@{ Field = 'Location';          Value = $ServiceGroupLocation;  Note = '' }
+        [PSCustomObject]@{ Field = 'ReportGenerated';   Value = $script:StartTimestamp.ToString('o'); Note = '' }
+        [PSCustomObject]@{ Field = 'ScriptVersion';     Value = '1.0.0';            Note = '' }
+        [PSCustomObject]@{ Field = 'Mode';              Value = $(if ($script:DryRunActive) { 'DryRun' } else { 'Live' }); Note = '' }
+        [PSCustomObject]@{ Field = '';                   Value = '';                  Note = '' }
+        [PSCustomObject]@{ Field = '── Resiliency Posture ──'; Value = '';            Note = '' }
+        [PSCustomObject]@{ Field = 'TotalResources';        Value = $TargetResources.Count; Note = '' }
+        [PSCustomObject]@{ Field = 'ZonalResilient';        Value = $(if ($Summary) { $Summary.ZRResources } else { 'N/A' }); Note = '' }
+        [PSCustomObject]@{ Field = 'NonZonalResilient';     Value = $(if ($Summary) { $Summary.NonZRResources } else { 'N/A' }); Note = '' }
+        [PSCustomObject]@{ Field = 'NotEvaluated';          Value = $(if ($Summary) { $Summary.NotEvaluatedResources } else { 'N/A' }); Note = '' }
+        [PSCustomObject]@{ Field = 'SkippedByResiliency';   Value = $skippedByResiliency; Note = 'Azure Resiliency focuses on resources that directly impact application resiliency. Supporting child or operational resources are intentionally skipped to avoid duplicate counting and to deliver reliable insights at scale. Learn more: https://aka.ms/ResourcesExcludedInResiliencyDiscovery' }
+        [PSCustomObject]@{ Field = '';                   Value = '';                  Note = '' }
+        [PSCustomObject]@{ Field = '── Explore More in Portal ──'; Value = '';        Note = '' }
+        [PSCustomObject]@{ Field = 'Get the most current resiliency summary for this application'; Value = 'ResiliencySummary'; Note = '' }
+        [PSCustomObject]@{ Field = 'Create and execute a zone-down drill for this application';    Value = 'ZoneDownDrill'; Note = '' }
+        [PSCustomObject]@{ Field = 'View resiliency summary at scale across all applications';     Value = 'At-scale summary'; Note = '' }
+    )
+
+    # ── Supported Resource Types & Known Issues (separate sheet) ──
+    $resourceTypesData = @(
+        [PSCustomObject]@{ ResourceType = 'Azure VM';           DetectedSolution = 'Azure Site Recovery with zonal disaster recovery (or) Manual attestation'; KnownIssues = 'When zone resiliency for VMs is implemented using custom or external solutions, manual attestation is required for the VMs to be recognized as resilient, and the report must be regenerated. We plan to enhance VM detection beginning May 2026, with more improvements coming later.' }
+        [PSCustomObject]@{ ResourceType = 'Azure SQL DB';       DetectedSolution = 'Azure SQL DB Zone-redundancy'; KnownIssues = '' }
+        [PSCustomObject]@{ ResourceType = 'Azure SQL MI';       DetectedSolution = 'Azure SQL MI Zone-redundancy'; KnownIssues = '' }
+        [PSCustomObject]@{ ResourceType = 'Azure Cosmos DB';    DetectedSolution = 'Azure Cosmos DB Zone-redundancy'; KnownIssues = '' }
+        [PSCustomObject]@{ ResourceType = 'Azure Database for PostgreSQL - Flexible Server'; DetectedSolution = 'Azure PostgreSQL Zone-redundancy'; KnownIssues = '' }
+        [PSCustomObject]@{ ResourceType = 'Azure Storage Account'; DetectedSolution = 'Zone-redundant storage / Geo-zone-redundant storage / Read-access geo-zone-redundant storage'; KnownIssues = '' }
+        [PSCustomObject]@{ ResourceType = 'Azure Service Bus'; DetectedSolution = 'Azure Service Bus Zone-redundancy'; KnownIssues = '' }
+        [PSCustomObject]@{ ResourceType = 'Azure Kubernetes Services'; DetectedSolution = 'Azure Kubernetes Services Zone-redundancy'; KnownIssues = 'Only the first node pool (system pool) is evaluated today for multi-zone presence.' }
+        [PSCustomObject]@{ ResourceType = 'Azure Container Registry'; DetectedSolution = 'Azure Container Registry Zone-redundancy'; KnownIssues = 'While Container Registries are now zone redundant by default, some registries may still appear as non ZR due to a known issue. This will be resolved by May 2026.' }
+        [PSCustomObject]@{ ResourceType = 'Azure Load Balancer'; DetectedSolution = 'Azure Load Balancer Zone-redundancy'; KnownIssues = 'Standard Load Balancers deployed in regions without zone support may be incorrectly reported as zone redundant. This issue is expected to be resolved by May 2026.' }
+        [PSCustomObject]@{ ResourceType = 'Azure Application Gateway'; DetectedSolution = 'Azure App Gateway Zone-redundancy'; KnownIssues = 'While Application Gateways are now zone redundant by default, some gateways may still appear as non ZR due to a known issue. This will be resolved by May 2026.' }
+        [PSCustomObject]@{ ResourceType = 'Azure Firewall';    DetectedSolution = 'Azure Firewall Zone-redundancy'; KnownIssues = '' }
+        [PSCustomObject]@{ ResourceType = 'Azure IP Address';  DetectedSolution = 'Azure IP Address Standard SKU Zone-redundancy'; KnownIssues = 'While Public IPs are now zone redundant by default, some IPs that were previously zonal may still appear as non ZR due to a known issue. This will be resolved by May 2026.' }
+        [PSCustomObject]@{ ResourceType = 'Azure Database for MySQL - Flexible Server'; DetectedSolution = 'Azure MySQL Zone-redundancy'; KnownIssues = '' }
+        [PSCustomObject]@{ ResourceType = 'Azure Cache for Redis'; DetectedSolution = 'Azure Cache for Redis Zone-redundancy'; KnownIssues = '' }
+        [PSCustomObject]@{ ResourceType = 'ExpressRoute Gateway'; DetectedSolution = 'ExpressRoute Zone Redundant SKU'; KnownIssues = 'Due to a known issue, some ExpressRoute gateways that were migrated to zone redundant may still appear as non ZR. This will be addressed by May 2026.' }
+        [PSCustomObject]@{ ResourceType = 'Azure VMSS';        DetectedSolution = 'Azure VMSS Zone Redundant Deployment'; KnownIssues = '' }
+        [PSCustomObject]@{ ResourceType = 'Azure App Service Plan'; DetectedSolution = 'Azure App Service Plan Zone Redundancy'; KnownIssues = '' }
+        [PSCustomObject]@{ ResourceType = 'Azure App Service Environment'; DetectedSolution = 'Azure App Service Environment Zone Redundancy'; KnownIssues = '' }
     )
 
     # Build hyperlink map for Overview sheet (row index -> URL)
@@ -1323,16 +1352,18 @@ function Export-ResiliencyExcelReport {
     # ── Write Output ──
     if ($script:HasImportExcel) {
         Export-ExcelWorkbook -OverviewData $overviewData -ResourceData $resourceData `
-            -RecommendationData $recommendationData -TraceData $traceData
+            -RecommendationData $recommendationData -TraceData $traceData `
+            -ResourceTypesData $resourceTypesData
     } else {
         Export-CsvFallback -OverviewData $overviewData -ResourceData $resourceData `
-            -RecommendationData $recommendationData -TraceData $traceData
+            -RecommendationData $recommendationData -TraceData $traceData `
+            -ResourceTypesData $resourceTypesData
     }
 }
 
 function Export-ExcelWorkbook {
     [CmdletBinding()]
-    param($OverviewData, $ResourceData, $RecommendationData, $TraceData)
+    param($OverviewData, $ResourceData, $RecommendationData, $TraceData, $ResourceTypesData)
 
     $xlFile = $OutputPath
     Write-Log "Generating Excel workbook: $xlFile"
@@ -1354,6 +1385,7 @@ function Export-ExcelWorkbook {
 
     # Find the Value column (column 2) and apply hyperlinks to link texts
     $valCol = 2
+    $noteCol = 3
     for ($r = 2; $r -le $wsOverview.Dimension.Rows; $r++) {
         $cellText = $wsOverview.Cells[$r, $valCol].Text
         if ($cellText -and $script:OverviewHyperlinks.ContainsKey($cellText)) {
@@ -1362,7 +1394,20 @@ function Export-ExcelWorkbook {
             $wsOverview.Cells[$r, $valCol].Style.Font.UnderLine = $true
             $wsOverview.Cells[$r, $valCol].Style.Font.Color.SetColor([System.Drawing.Color]::Blue)
         }
+        # Bold section header rows (e.g. "── Resiliency Posture ──")
+        $fieldText = $wsOverview.Cells[$r, 1].Text
+        if ($fieldText -match '^\u2500\u2500') {
+            for ($c = 1; $c -le $wsOverview.Dimension.Columns; $c++) {
+                $wsOverview.Cells[$r, $c].Style.Font.Bold = $true
+            }
+        }
     }
+
+    # Set column widths and wrap for readability
+    $wsOverview.Column($valCol).Width = 60
+    $wsOverview.Column($noteCol).Width = 80
+    $wsOverview.Column($noteCol).Style.WrapText = $true
+
     $pkg.Save()
     $pkg.Dispose()
 
@@ -1434,6 +1479,19 @@ function Export-ExcelWorkbook {
             Export-Excel -Path $xlFile -WorksheetName 'Recommendations' -AutoSize
     }
 
+    # Supported Resource Types sheet
+    if ($ResourceTypesData.Count -gt 0) {
+        $pkg = $ResourceTypesData | Export-Excel -Path $xlFile -WorksheetName 'Supported Resource Types' @commonParams -PassThru
+        $wsTypes = $pkg.Workbook.Worksheets['Supported Resource Types']
+        # Widen columns for readability
+        $wsTypes.Column(1).Width = 45
+        $wsTypes.Column(2).Width = 60
+        $wsTypes.Column(3).Width = 80
+        $wsTypes.Column(3).Style.WrapText = $true
+        $pkg.Save()
+        $pkg.Dispose()
+    }
+
     # ApiTrace sheet
     if ($TraceData.Count -gt 0) {
         $TraceData | Export-Excel -Path $xlFile -WorksheetName 'ApiTrace' @commonParams
@@ -1444,7 +1502,7 @@ function Export-ExcelWorkbook {
 
 function Export-CsvFallback {
     [CmdletBinding()]
-    param($OverviewData, $ResourceData, $RecommendationData, $TraceData)
+    param($OverviewData, $ResourceData, $RecommendationData, $TraceData, $ResourceTypesData)
 
     $csvDir = [System.IO.Path]::ChangeExtension($OutputPath, $null).TrimEnd('.')
     if (-not (Test-Path $csvDir)) { New-Item -ItemType Directory -Path $csvDir -Force | Out-Null }
@@ -1453,6 +1511,7 @@ function Export-CsvFallback {
     $OverviewData        | Export-Csv -Path (Join-Path $csvDir 'Overview.csv') -NoTypeInformation -Encoding UTF8
     $ResourceData        | Export-Csv -Path (Join-Path $csvDir 'Resources.csv') -NoTypeInformation -Encoding UTF8
     $RecommendationData  | Export-Csv -Path (Join-Path $csvDir 'Recommendations.csv') -NoTypeInformation -Encoding UTF8
+    $ResourceTypesData   | Export-Csv -Path (Join-Path $csvDir 'SupportedResourceTypes.csv') -NoTypeInformation -Encoding UTF8
     $TraceData           | Export-Csv -Path (Join-Path $csvDir 'ApiTrace.csv') -NoTypeInformation -Encoding UTF8
 
     Write-Log "CSV files saved to: $csvDir" -Level INFO

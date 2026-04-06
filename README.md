@@ -105,3 +105,29 @@ The script will prompt for Azure login if needed, then generate a report at `.\R
 | `-OutputPath` | No | Auto-generated | Path for the output Excel file |
 | `-DryRun` | No | `$false` | Skip write operations; read-only preview mode |
 | `-ApiConfigPath` | No | — | JSON file to override API catalog entries (see `apiConfig.sample.json`) |
+
+## Supported Resource Types and Known Issues
+
+The following table lists the Azure-supported solutions recognised by Resiliency service for each resource type:
+
+| **Resource Type** | **Detected Solution** | **Known Issues** |
+|---|---|---|
+| Azure VM | Azure Site Recovery with zonal disaster recovery (or) Manual attestation | When zone resiliency for VMs is implemented using custom or external solutions, manual attestation is required for the VMs to be recognized as resilient, and the report must be regenerated. We plan to enhance VM detection beginning May 2026, with more improvements coming later. |
+| Azure SQL DB | Azure SQL DB Zone-redundancy | |
+| Azure SQL MI | Azure SQL MI Zone-redundancy | |
+| Azure Cosmos DB | Azure Cosmos DB Zone-redundancy | |
+| Azure Database for PostgreSQL - Flexible Server | Azure PostgreSQL Zone-redundancy | |
+| Azure Storage Account | Zone-redundant storage / Geo-zone-redundant storage / Read-access geo-zone-redundant storage | |
+| Azure Service Bus | Azure Service Bus Zone-redundancy | |
+| Azure Kubernetes Services | Azure Kubernetes Services Zone-redundancy | Only the first node pool (system pool) is evaluated today for multi-zone presence. |
+| Azure Container Registry | Azure Container Registry Zone-redundancy | While Container Registries are now zone redundant by default, some registries may still appear as non ZR due to a known issue. This will be resolved by May 2026. |
+| Azure Load Balancer | Azure Load Balancer Zone-redundancy | Standard Load Balancers deployed in regions without zone support may be incorrectly reported as zone redundant. This issue is expected to be resolved by May 2026. |
+| Azure Application Gateway | Azure App Gateway Zone-redundancy | While Application Gateways are now zone redundant by default, some gateways may still appear as non ZR due to a known issue. This will be resolved by May 2026. |
+| Azure Firewall | Azure Firewall Zone-redundancy | |
+| Azure IP Address | Azure IP Address Standard SKU Zone-redundancy | While Public IPs are now zone redundant by default, some IPs that were previously zonal may still appear as non ZR due to a known issue. This will be resolved by May 2026. |
+| Azure Database for MySQL - Flexible Server | Azure MySQL Zone-redundancy | |
+| Azure Cache for Redis | Azure Cache for Redis Zone-redundancy | |
+| ExpressRoute Gateway | ExpressRoute Zone Redundant SKU | Due to a known issue, some ExpressRoute gateways that were migrated to zone redundant may still appear as non ZR. This will be addressed by May 2026. |
+| Azure VMSS | Azure VMSS Zone Redundant Deployment | |
+| Azure App Service Plan | Azure App Service Plan Zone Redundancy | |
+| Azure App Service Environment | Azure App Service Environment Zone Redundancy | |
