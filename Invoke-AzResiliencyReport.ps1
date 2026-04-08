@@ -1286,7 +1286,7 @@ function Export-ResiliencyExcelReport {
     $resourceData = @()
     if ($Posture -and $Posture.Count -gt 0) {
         foreach ($row in $Posture) {
-            $rid = $row.id
+            $rid = $row.goalResourceId
             $status = $row.Status
             $overrideOptions = ''
             $overrideUrl = ''
